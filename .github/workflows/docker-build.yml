@@ -112,10 +112,12 @@ jobs:
       - name: Push dev image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || inputs.push_images == 'true')
         run: |
-          # Tag the already-built image with registry tags
-          for tag in ${{ steps.meta.outputs.tags }}; do
-            docker tag gem5:dev-${{ matrix.suffix }} "$tag"
-            docker push "$tag"
+          # Tag and push the already-built image with registry tags
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
+            if [ -n "$tag" ]; then
+              docker tag gem5:dev-${{ matrix.suffix }} "$tag"
+              docker push "$tag"
+            fi
           done
 
   create-manifest:
@@ -248,10 +250,12 @@ jobs:
       - name: Push prebuilt image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || inputs.push_images == 'true')
         run: |
-          # Tag the already-built image with registry tags
-          for tag in ${{ steps.meta.outputs.tags }}; do
-            docker tag gem5:prebuilt-${{ matrix.suffix }} "$tag"
-            docker push "$tag"
+          # Tag and push the already-built image with registry tags
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
+            if [ -n "$tag" ]; then
+              docker tag gem5:prebuilt-${{ matrix.suffix }} "$tag"
+              docker push "$tag"
+            fi
           done
 
   create-prebuilt-manifest:
