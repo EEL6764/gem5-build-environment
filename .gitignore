@@ -1,0 +1,31 @@
+# Workspace directory
+workspace/
+
+# Build artifacts
+build/
+*.o
+*.pyc
+__pycache__/
+
+# Environment files
+.env
+.env.local
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker volumes
+.docker/
+
+# Logs
+*.log
+logs/

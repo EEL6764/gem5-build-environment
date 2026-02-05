@@ -1,0 +1,9 @@
+# Default owners for everything
+* @<your-github-username>
+
+# CI/CD files
+.github/ @<your-github-username>
+
+# Docker configuration
+Dockerfile* @<your-github-username>
+docker-compose.yml @<your-github-username>

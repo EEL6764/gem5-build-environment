@@ -1,0 +1,87 @@
+# gem5 Docker Setup - Pre-built binary image
+# Multi-architecture support for AMD64 and ARM64
+
+ARG BASE_IMAGE=ubuntu:22.04
+FROM ${BASE_IMAGE}
+
+LABEL maintainer="gem5-docker"
+LABEL description="gem5 simulator with pre-built binaries"
+LABEL version="1.0"
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Build arguments
+ARG GEM5_VERSION=v25.1
+ARG TARGETARCH
+ARG BUILD_ISA=ALL
+
+# Set environment variables
+ENV GEM5_HOME=/opt/gem5
+ENV PATH="${GEM5_HOME}/build:${PATH}"
+
+# Install base dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    m4 \
+    scons \
+    zlib1g \
+    zlib1g-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libprotoc-dev \
+    libgoogle-perftools-dev \
+    python3-dev \
+    python3-pip \
+    python3-pydot \
+    python3-venv \
+    libboost-all-dev \
+    pkg-config \
+    wget \
+    curl \
+    ca-certificates \
+    libpng-dev \
+    libhdf5-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    scons \
+    pydot \
+    matplotlib \
+    pyyaml \
+    mypy
+
+# Clone gem5 repository
+RUN git clone https://github.com/gem5/gem5.git ${GEM5_HOME} \
+    && cd ${GEM5_HOME} \
+    && git checkout ${GEM5_VERSION}
+
+WORKDIR ${GEM5_HOME}
+
+# Copy build script
+COPY scripts/build-gem5.sh /usr/local/bin/build-gem5.sh
+RUN chmod +x /usr/local/bin/build-gem5.sh
+
+# Build gem5 based on target architecture
+# For ARM64 hosts, build ARM ISA by default
+# For AMD64 hosts, build X86 ISA by default
+# Disable KVM support as it's not available in Docker containers
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        scons build/ARM/gem5.opt -j$(nproc) --ignore-style USE_KVM=0; \
+    else \
+        scons build/X86/gem5.opt -j$(nproc) --ignore-style USE_KVM=0; \
+    fi
+
+# Create health check script
+COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
+
+# Default command - show gem5 version
+CMD ["bash", "-c", "find /opt/gem5/build -name 'gem5.*' -executable -type f | head -1 | xargs -I {} {} --version || echo 'gem5 ready'"]

@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# GitHub
+.github
+
+# Documentation
+*.md
+!README.md
+LICENSE
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+*.o
+*.pyc
+__pycache__
+
+# Local configuration
+.env
+.env.local
+*.local
+
+# Workspace directory (user files)
+workspace/
+
+# Test files
+tests/
+test/
