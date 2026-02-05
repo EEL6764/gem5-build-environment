@@ -34,14 +34,14 @@ help:
 	@echo "  make push           - Push images to registry"
 	@echo ""
 	@echo "Environment Variables:"
-	@echo "  GEM5_VERSION        - gem5 version to use (default: v25.1)"
+	@echo "  GEM5_VERSION        - gem5 version to use (default: v24.0)"
 	@echo "  ISA                 - Target ISA for build (default: ARM)"
 	@echo "  TYPE                - Build type: debug, opt, fast (default: opt)"
 	@echo "  JOBS                - Parallel jobs (default: auto)"
 	@echo ""
 
 # Variables
-GEM5_VERSION ?= v25.1
+GEM5_VERSION ?= v24.0
 ISA ?= ARM
 TYPE ?= opt
 JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
@@ -130,7 +130,7 @@ gem5-build-all:
 			$(IMAGE_NAME):dev /usr/local/bin/build-gem5.sh --all --type $(TYPE) --jobs $(JOBS); \
 	fi
 
-# Run tests
+
 test:
 	@echo "Running health checks..."
 	@docker run --rm $(IMAGE_NAME):dev /usr/local/bin/healthcheck.sh
@@ -140,7 +140,7 @@ test-build:
 	@docker run --rm $(IMAGE_NAME):dev bash -c "bash -n /usr/local/bin/build-gem5.sh && echo 'Build script syntax OK'"
 	@docker run --rm $(IMAGE_NAME):dev /usr/local/bin/build-gem5.sh --help
 
-# Clean up
+
 clean:
 	@echo "Stopping and removing containers..."
 	-docker stop $(CONTAINER_NAME) 2>/dev/null
@@ -149,7 +149,7 @@ clean:
 	-docker rmi $(IMAGE_NAME):dev $(IMAGE_NAME):prebuilt 2>/dev/null
 	@echo "Cleanup complete."
 
-# Push to registry
+
 push:
 	@echo "Pushing images to registry..."
 	docker push $(IMAGE_NAME):dev

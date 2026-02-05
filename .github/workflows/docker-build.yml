@@ -17,7 +17,7 @@ on:
       gem5_version:
         description: 'gem5 version tag'
         required: false
-        default: 'v25.1'
+        default: 'v24.0'
       push_images:
         description: 'Push images to registry'
         required: false
@@ -81,7 +81,7 @@ jobs:
           load: true
           tags: gem5:dev-${{ matrix.suffix }}
           build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v25.1' }}
+            GEM5_VERSION=${{ inputs.gem5_version || 'v24.0' }}
           cache-from: type=gha,scope=dev-${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=dev-${{ matrix.suffix }}
 
@@ -206,7 +206,7 @@ jobs:
           load: true
           tags: gem5:prebuilt-${{ matrix.suffix }}
           build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v25.1' }}
+            GEM5_VERSION=${{ inputs.gem5_version || 'v24.0' }}
           cache-from: type=gha,scope=prebuilt-${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=prebuilt-${{ matrix.suffix }}
 

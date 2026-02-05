@@ -1,0 +1,88 @@
+{
+  "name": "gem5 Development Environment",
+  "image": "ghcr.io/krishbinpaudel/eel-gem5:dev",
+  
+  // Use the prebuilt image with gem5 binaries for faster setup
+  // Alternatively, use "ghcr.io/krishbinpaudel/eel-gem5:prebuilt" for pre-compiled gem5
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // C/C++ development
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        
+        // Python development (gem5 configs are Python)
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        
+        // Git integration
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        
+        // Code formatting
+        "esbenp.prettier-vscode",
+        "ms-python.black-formatter",
+        
+        // Useful utilities
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens",
+        "gruntfuggly.todo-tree"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/gem5/build/compile_commands.json",
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true,
+        "files.associations": {
+          "*.py": "python",
+          "SConstruct": "python",
+          "SConscript": "python"
+        }
+      }
+    }
+  },
+  
+  // Mount workspace folder for user's gem5 code
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  
+  // Additional mounts
+  "mounts": [
+    // Persist bash history
+    "source=gem5-bashhistory,target=/commandhistory,type=volume"
+  ],
+  
+  // Environment variables
+  "containerEnv": {
+    "GEM5_HOME": "/opt/gem5",
+    "HISTFILE": "/commandhistory/.bash_history"
+  },
+  
+  // Run commands after container is created
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  
+  // Run commands when attaching to container
+  "postAttachCommand": "echo '🚀 gem5 Development Environment Ready!' && echo 'gem5 source: /opt/gem5' && echo 'Your workspace: /workspace'",
+  
+  // Features to add
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  
+  // Container user
+  "remoteUser": "root",
+  
+  // Forward ports (useful for m5term connections)
+  "forwardPorts": [3456],
+  
+  // Resource limits (gem5 builds need lots of memory)
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  }
+}

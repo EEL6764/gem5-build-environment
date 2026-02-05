@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
 # Build arguments
-ARG GEM5_VERSION=v25.1
+ARG GEM5_VERSION=v24.0
 ARG TARGETARCH
 ARG BUILD_ISA=ALL
 
@@ -68,11 +68,11 @@ RUN chmod +x /usr/local/bin/build-gem5.sh
 # Build gem5 based on target architecture
 # For ARM64 hosts, build ARM ISA by default
 # For AMD64 hosts, build X86 ISA by default
-# Disable KVM support as it's not available in Docker containers
+# KVM is not available in Docker containers
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        scons build/ARM/gem5.opt -j$(nproc) --ignore-style USE_KVM=0; \
+        scons build/ARM/gem5.opt -j$(nproc) --ignore-style; \
     else \
-        scons build/X86/gem5.opt -j$(nproc) --ignore-style USE_KVM=0; \
+        scons build/X86/gem5.opt -j$(nproc) --ignore-style; \
     fi
 
 # Create health check script

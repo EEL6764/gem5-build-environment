@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
 # Build arguments
-ARG GEM5_VERSION=v25.1
+ARG GEM5_VERSION=v24.0
 ARG TARGETARCH
 
 # Set environment variables
