@@ -74,7 +74,7 @@ jobs:
           tags: gem5:${{ matrix.base }}
           build-args: |
             BASE_IMAGE=${{ matrix.base }}
-            GEM5_VERSION=v23.1
+            GEM5_VERSION=v25.1
 
       - name: Run health check
         run: |

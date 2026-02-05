@@ -40,7 +40,7 @@ jobs:
             runner: ubuntu-latest
             suffix: amd64
           - platform: linux/arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
             suffix: arm64
 
     permissions:
@@ -50,9 +50,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -85,8 +82,8 @@ jobs:
           tags: gem5:dev-${{ matrix.suffix }}
           build-args: |
             GEM5_VERSION=${{ inputs.gem5_version || 'v25.1' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=dev-${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=dev-${{ matrix.suffix }}
 
       - name: Run health check
         run: |
@@ -114,18 +111,12 @@ jobs:
 
       - name: Push dev image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || inputs.push_images == 'true')
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v23.1' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          # Tag the already-built image with registry tags
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            docker tag gem5:dev-${{ matrix.suffix }} "$tag"
+            docker push "$tag"
+          done
 
   create-manifest:
     name: Create Multi-Arch Manifest
@@ -138,6 +129,9 @@ jobs:
       packages: write
 
     steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -147,97 +141,13 @@ jobs:
 
       - name: Create and push manifest
         run: |
-          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev \
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-arm64
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
 
-          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-arm64
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-  health-check:
-    name: Container Health Check
-    needs: build-dev-image
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build test image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: gem5:test
-          build-args: |
-            GEM5_VERSION=v25.1
-
-      - name: Run comprehensive health checks
-        run: |
-          echo "============================================"
-          echo "Starting comprehensive health check suite"
-          echo "============================================"
-          
-          # Start container
-          docker run --name gem5-test -d gem5:test tail -f /dev/null
-          
-          # Wait for container
-          sleep 5
-          
-          echo ""
-          echo "1. Basic health check script..."
-          docker exec gem5-test /usr/local/bin/healthcheck.sh
-          
-          echo ""
-          echo "2. Verify gem5 repository structure..."
-          docker exec gem5-test test -f /opt/gem5/SConstruct && echo "✓ SConstruct found" || exit 1
-          docker exec gem5-test test -d /opt/gem5/src && echo "✓ src directory found" || exit 1
-          docker exec gem5-test test -d /opt/gem5/configs && echo "✓ configs directory found" || exit 1
-          
-          echo ""
-          echo "3. Check build tools..."
-          docker exec gem5-test gcc --version | head -1
-          docker exec gem5-test g++ --version | head -1
-          docker exec gem5-test scons --version | head -1
-          
-          echo ""
-          echo "4. Check Python environment..."
-          docker exec gem5-test python3 --version
-          docker exec gem5-test python3 -c "import pydot; print('✓ pydot available')"
-          
-          echo ""
-          echo "5. Verify scons can parse gem5 SConstruct..."
-          docker exec gem5-test bash -c "cd /opt/gem5 && scons --help | head -20"
-          
-          echo ""
-          echo "6. Check available ISAs..."
-          docker exec gem5-test ls /opt/gem5/src/arch/
-          
-          echo ""
-          echo "============================================"
-          echo "All health checks passed!"
-          echo "============================================"
-          
-          # Cleanup
-          docker stop gem5-test
-          docker rm gem5-test
-
-      - name: Test build script
-        run: |
-          echo "Testing build script syntax..."
-          docker run --rm gem5:test bash -c "bash -n /usr/local/bin/build-gem5.sh && echo '✓ Build script syntax OK'"
-          
-          echo "Testing build script help..."
-          docker run --rm gem5:test /usr/local/bin/build-gem5.sh --help
 
   # Build prebuilt images with gem5 binaries
   build-prebuilt-image:
@@ -252,7 +162,7 @@ jobs:
             suffix: amd64
             isa: X86
           - platform: linux/arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
             suffix: arm64
             isa: ARM
 
@@ -263,9 +173,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -298,8 +205,8 @@ jobs:
           tags: gem5:prebuilt-${{ matrix.suffix }}
           build-args: |
             GEM5_VERSION=${{ inputs.gem5_version || 'v25.1' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=prebuilt-${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=prebuilt-${{ matrix.suffix }}
 
       - name: Run prebuilt health check
         run: |
@@ -340,18 +247,12 @@ jobs:
 
       - name: Push prebuilt image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || inputs.push_images == 'true')
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.prebuilt
-          platforms: ${{ matrix.platform }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v25.1' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          # Tag the already-built image with registry tags
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            docker tag gem5:prebuilt-${{ matrix.suffix }} "$tag"
+            docker push "$tag"
+          done
 
   create-prebuilt-manifest:
     name: Create Prebuilt Multi-Arch Manifest
@@ -364,6 +265,9 @@ jobs:
       packages: write
 
     steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -373,7 +277,6 @@ jobs:
 
       - name: Create and push prebuilt manifest
         run: |
-          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt \
+          docker buildx imagetools create -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt-arm64
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt
