@@ -1,6 +1,7 @@
 # Workspace directory
 workspace/
-
+gem5_base/
+gem5/
 # Build artifacts
 build/
 *.o

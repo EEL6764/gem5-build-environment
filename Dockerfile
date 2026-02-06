@@ -10,9 +10,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
 # Build arguments
-ARG GEM5_VERSION=v24.0
+ARG GEM5_VERSION=class
 ARG TARGETARCH
-
+ARG GEM5_REPO_URL=https://github.com/EEL6764/gem5.git
 # Set environment variables
 ENV GEM5_HOME=/opt/gem5
 ENV PATH="${GEM5_HOME}/build:${PATH}"
@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libpng-dev \
     libhdf5-dev \
+    libcapstone-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir \
@@ -50,7 +51,7 @@ RUN pip3 install --no-cache-dir \
     mypy \
     pre-commit
 
-RUN git clone https://github.com/gem5/gem5.git ${GEM5_HOME} \
+RUN git clone ${GEM5_REPO_URL} ${GEM5_HOME} \
     && cd ${GEM5_HOME} \
     && git checkout ${GEM5_VERSION}
 
