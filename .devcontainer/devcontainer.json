@@ -1,9 +1,9 @@
 {
   "name": "gem5 Development Environment",
-  "image": "ghcr.io/krishbinpaudel/eel-gem5:dev",
+  "image": "ghcr.io/eel6764/gem5-build-environment:prebuilt",
   
   // Use the prebuilt image with gem5 binaries for faster setup
-  // Alternatively, use "ghcr.io/krishbinpaudel/eel-gem5:prebuilt" for pre-compiled gem5
+  // Alternatively, use "ghcr.io/eel6764/gem5-build-environment:prebuilt" for pre-compiled gem5
   
   "customizations": {
     "vscode": {
