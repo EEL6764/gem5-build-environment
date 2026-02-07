@@ -81,7 +81,7 @@ jobs:
           load: true
           tags: gem5:dev-${{ matrix.suffix }}
           build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v24.0' }}
+            GEM5_VERSION=${{ inputs.gem5_version || 'class' }}
           cache-from: type=gha,scope=dev-${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=dev-${{ matrix.suffix }}
 
@@ -206,7 +206,7 @@ jobs:
           load: true
           tags: gem5:prebuilt-${{ matrix.suffix }}
           build-args: |
-            GEM5_VERSION=${{ inputs.gem5_version || 'v24.0' }}
+            GEM5_VERSION=${{ inputs.gem5_version || 'class' }}
           cache-from: type=gha,scope=prebuilt-${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=prebuilt-${{ matrix.suffix }}
 
