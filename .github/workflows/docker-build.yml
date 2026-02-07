@@ -17,7 +17,7 @@ on:
       gem5_version:
         description: 'gem5 version tag'
         required: false
-        default: 'v24.0'
+        default: 'class'
       push_images:
         description: 'Push images to registry'
         required: false
