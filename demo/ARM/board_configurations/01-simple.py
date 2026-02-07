@@ -71,10 +71,10 @@ board = SimpleBoard(
     clk_freq="3GHz",
 )
 
-binary_path = Path(__file__).parent.parent.parent / "programs" / "mm_bench"
+binary_path = Path(__file__).parent.parent.parent / "programs" / "mm_bench_arm"
 board.set_se_binary_workload(
     binary=BinaryResource(local_path=str(binary_path)),
-    arguments=["-n", "32", "-repeat", "3", "-kernel", "ijk", "-check"],
+    arguments=["32", "ijk"],
 )
 
 simulator = Simulator(board)
