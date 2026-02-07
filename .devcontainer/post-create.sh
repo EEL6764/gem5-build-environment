@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 echo "=========================================="
 echo "Setting up gem5 Development Environment"

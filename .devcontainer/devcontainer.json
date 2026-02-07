@@ -62,7 +62,7 @@
   },
 
   // Run commands after container is created
-  "postCreateCommand": "/workspace/.devcontainer/post-create.sh",
+  "postCreateCommand": "bash /workspace/.devcontainer/post-create.sh",
 
   // Run commands when attaching to container
   "postAttachCommand": "echo '🚀 gem5 Development Environment Ready!' && echo 'gem5 source: /opt/gem5' && echo 'Your workspace: /workspace'",
